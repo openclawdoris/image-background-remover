@@ -20,8 +20,8 @@ function cn(...inputs: any[]) {
   return twMerge(clsx(inputs));
 }
 
-// 使用相对路径，让 Next.js API routes 代理请求，避免 CORS 问题
-const API_BASE = '/api/proxy';
+// 直接访问后端（同一台服务器，没有跨域问题）
+const API_BASE = 'http://localhost:8000';
 
 type ToolType = 'background' | 'watermark';
 
