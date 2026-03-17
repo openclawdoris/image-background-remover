@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片工具 - 背景移除</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">🎨 图片工具</h1>
+            <p class="text-xl text-gray-600">AI 驱动的图片处理工具 - 一键移除背景</p>
+            <p class="text-sm text-gray-500 mt-2">注意：此版本需要后端 API 支持</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all">
+                    <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-700 mb-2">点击上传图片</p>
+                    <p class="text-sm text-gray-500">支持 JPG, PNG, WEBP</p>
+                    <input type="file" id="file-input" accept="image/*" class="hidden">
+                </div>
+
+                <div id="preview-section" class="hidden space-y-4">
+                    <div class="bg-white rounded-2xl p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-600 mb-2" id="file-name"></p>
+                        <img id="preview-image" class="w-full rounded-lg" alt="Preview">
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="process-btn" class="flex-1 py-3 px-6 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <span id="process-text">开始处理</span>
+                            <span id="processing-text" class="hidden">处理中...</span>
+                        </button>
+                        <button id="reset-btn" class="py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors">
+                            重置
+                        </button>
+                    </div>
+                </div>
+
+                <div id="message" class="hidden p-4 rounded-xl"></div>
+            </div>
+
+            <div>
+                <div id="result-section" class="hidden bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">✨ 处理完成</h3>
+                    <img id="result-image" class="w-full rounded-lg mb-4" alt="Result">
+                    <button id="download-btn" class="w-full py-3 px-6 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors">
+                        下载图片
+                    </button>
+                </div>
+                <div id="placeholder" class="bg-white/60 backdrop-blur-sm rounded-2xl p-12 text-center border-2 border-dashed border-gray-200">
+                    <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="text-gray-500">处理结果将在这里显示</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置：请修改为你的后端 API 地址
+        const API_BASE = 'http://43.130.59.75:8000';
+        
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const previewSection = document.getElementById('preview-section');
+        const previewImage = document.getElementById('preview-image');
+        const fileName = document.getElementById('file-name');
+        const processBtn = document.getElementById('process-btn');
+        const processText = document.getElementById('process-text');
+        const processingText = document.getElementById('processing-text');
+        const resetBtn = document.getElementById('reset-btn');
+        const resultSection = document.getElementById('result-section');
+        const resultImage = document.getElementById('result-image');
+        const downloadBtn = document.getElementById('download-btn');
+        const placeholder = document.getElementById('placeholder');
+        const messageDiv = document.getElementById('message');
+
+        let selectedFile = null;
+        let resultId = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                fileName.textContent = file.name;
+                previewImage.src = URL.createObjectURL(file);
+                previewSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                hideMessage();
+            }
+        });
+
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            processBtn.disabled = true;
+            processText.classList.add('hidden');
+            processingText.classList.remove('hidden');
+            hideMessage();
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const response = await fetch(`${API_BASE}/api/remove-background`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultId = data.output_id;
+                    resultImage.src = `${API_BASE}/api/output/${resultId}`;
+                    resultSection.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    showMessage('处理成功！', 'success');
+                } else {
+                    showMessage(data.detail || '处理失败，请重试', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误，请确保后端服务已启动', 'error');
+                console.error('Processing error:', error);
+            } finally {
+                processBtn.disabled = false;
+                processText.classList.remove('hidden');
+                processingText.classList.add('hidden');
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            selectedFile = null;
+            resultId = null;
+            fileInput.value = '';
+            previewSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            hideMessage();
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (resultId) {
+                const a = document.createElement('a');
+                a.href = `${API_BASE}/api/output/${resultId}`;
+                a.download = 'image-no-bg.png';
+                a.click();
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.classList.remove('hidden', 'bg-green-50', 'text-green-800', 'bg-red-50', 'text-red-800');
+            if (type === 'success') {
+                messageDiv.classList.add('bg-green-50', 'text-green-800');
+            } else {
+                messageDiv.classList.add('bg-red-50', 'text-red-800');
+            }
+        }
+
+        function hideMessage() {
+            messageDiv.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
