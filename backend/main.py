@@ -14,6 +14,14 @@ load_dotenv()
 
 app = FastAPI(title="Image Tools API", version="1.0.0")
 
+@app.get("/")
+async def root():
+    return {"message": "Image Tools API", "version": "1.0.0"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
