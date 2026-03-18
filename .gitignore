@@ -64,3 +64,9 @@ test_output.png
 *.jpg
 *.jpeg
 *.webp
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
