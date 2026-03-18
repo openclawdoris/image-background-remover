@@ -309,7 +309,7 @@
 
     <script>
         // 配置：请修改为你的后端 API 地址
-        const API_BASE = 'http://43.130.59.75:8000';
+        const API_BASE = '';  // 使用相对路径，调用 Pages Functions
         
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
@@ -367,7 +367,12 @@
 
                 if (data.success) {
                     resultId = data.output_id;
-                    resultImage.src = `${API_BASE}/api/output/${resultId}`;
+                    // 支持直接 base64 图片数据
+                    if (data.image_data) {
+                        resultImage.src = data.image_data;
+                    } else {
+                        resultImage.src = `${API_BASE}/api/output/${resultId}`;
+                    }
                     resultSection.classList.remove('hidden');
                     placeholder.classList.add('hidden');
                     showMessage('处理成功！', 'success');
@@ -395,9 +400,9 @@
         });
 
         downloadBtn.addEventListener('click', () => {
-            if (resultId) {
+            if (resultImage.src) {
                 const a = document.createElement('a');
-                a.href = `${API_BASE}/api/output/${resultId}`;
+                a.href = resultImage.src;
                 a.download = 'image-no-bg.png';
                 a.click();
             }
