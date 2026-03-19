@@ -1,6 +1,5 @@
-export interface Env {
-  REMOVE_BG_API_KEY?: string;
-}
+import type { Env } from './auth/types';
+import { getSession, getUserById, recordApiUsage, checkUserQuota } from './auth/db';
 
 export async function onRequestPost(context: {
   request: Request;
@@ -16,6 +15,40 @@ export async function onRequestPost(context: {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    // 验证用户认证
+    const cookieHeader = request.headers.get('Cookie');
+    const sessionId = cookieHeader
+      ?.split(';')
+      .find((c) => c.trim().startsWith('session_id='))
+      ?.split('=')[1];
+
+    let userId: number | null = null;
+
+    if (sessionId) {
+      const session = await getSession(env.DB, sessionId);
+      if (session) {
+        userId = session.user_id;
+      }
+    }
+
+    // 如果已登录，检查配额
+    if (userId) {
+      const hasQuota = await checkUserQuota(env.DB, userId);
+      if (!hasQuota) {
+        const user = await getUserById(env.DB, userId);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            detail: `今日 API 调用次数已用完（${user?.api_calls_limit} 次），请明天再试或升级套餐。`,
+          }),
+          {
+            status: 429,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
     }
 
     // 如果没有配置 API Key，返回提示
@@ -68,6 +101,11 @@ export async function onRequestPost(context: {
         ''
       )
     );
+
+    // 记录 API 使用（如果用户已登录）
+    if (userId) {
+      await recordApiUsage(env.DB, userId, 'remove-background');
+    }
 
     return new Response(
       JSON.stringify({
