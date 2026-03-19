@@ -35,10 +35,8 @@ export async function POST(request: NextRequest) {
     }
 
     const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(blob, {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'no-cache',
