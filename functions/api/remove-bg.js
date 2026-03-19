@@ -1,7 +1,7 @@
-export async function onRequestPost(context: any) {
+export async function onRequestPost(context) {
   try {
     const formData = await context.request.formData();
-    const imageFile = formData.get('image') as File;
+    const imageFile = formData.get('image');
     
     if (!imageFile) {
       return new Response(JSON.stringify({ error: 'No image provided' }), {

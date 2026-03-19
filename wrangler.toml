@@ -1,0 +1,10 @@
+name = "image-bg-remover"
+compatibility_date = "2024-01-01"
+
+[vars]
+REMOVE_BG_API_KEY = "YLFvNi1K7mAeffqosjvokGmH"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
