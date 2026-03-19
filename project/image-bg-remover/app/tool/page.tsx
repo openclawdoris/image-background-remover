@@ -112,6 +112,8 @@ export default function ToolPage() {
     link.click();
   };
 
+  const transparentGridUrl = "data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23999' fill-opacity='0.1'%3E%3Cpath d='M0 0h10v10H0zM10 10h10v10H10z'/%3E%3C/g%3E%3C/svg%3E";
+
   const getBackgroundStyle = () => {
     switch (backgroundType) {
       case 'white':
@@ -121,7 +123,7 @@ export default function ToolPage() {
       case 'gradient':
         return 'bg-gradient-to-br from-blue-500 to-purple-600';
       default:
-        return 'bg-[url("data:image/svg+xml,%3Csvg width=\\"20\\" height=\\"20\\" viewBox=\\"0 0 20 20\\" xmlns=\\"http://www.w3.org/2000/svg\\"%3E%3Cg fill=\\"%23999\\" fill-opacity=\\"0.1\\"%3E%3Cpath d=\\"M0 0h10v10H0zM10 10h10v10H10z\\"/%3E%3C/g%3E%3C/svg%3E")]';
+        return 'bg-[url(' + transparentGridUrl + ')]';
     }
   };
 
@@ -272,7 +274,7 @@ export default function ToolPage() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="w-full aspect-square rounded-lg bg-[url('data:image/svg+xml,%3Csvg width=\\"20\\" height=\\"20\\" viewBox=\\"0 0 20 20\\" xmlns=\\"http://www.w3.org/2000/svg\\"%3E%3Cg fill=\\"%23999\\" fill-opacity=\\"0.1\\"%3E%3Cpath d=\\"M0 0h10v10H0zM10 10h10v10H10z\\"/%3E%3C/g%3E%3C/svg%3E')] mb-2" />
+                      <div className="w-full aspect-square rounded-lg bg-[url(' + transparentGridUrl + ')] mb-2" />
                       <span className="text-sm font-medium text-gray-700">透明</span>
                     </button>
                     <button
